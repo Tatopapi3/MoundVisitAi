@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MoundVisit AI
+
+An AI-powered baseball mechanics analyzer that gives athletes the same frame-by-frame feedback as a $150/hr private coach — in under 60 seconds, for every position on the diamond.
+
+---
+
+## Features
+
+- **Video Upload & Analysis** — Upload a clip of your mechanics and get a full AI breakdown in seconds
+- **Timestamped Breakdowns** — Every finding is tied to the exact moment in your video
+- **All 4 Positions** — Pitching, Hitting, Fielding, and Catching each have their own checkpoint system
+- **Mechanics Score** — Quantified rating of your form across key checkpoints
+- **Drill Prescriptions** — Every flagged issue comes with specific drills to fix it
+- **Progress Tracking** — Compare sessions over time to see your mechanics improve
+- **Auth System** — Secure sign up / sign in with session management
+
+---
+
+## Position Checkpoints
+
+| Position | Key Checkpoints |
+|---|---|
+| Pitching | Leg lift, Arm path, Hip separation, Release point, Follow-through |
+| Hitting | Stance & load, Hip rotation, Swing path, Contact point, Hand path |
+| Fielding | Ready position, First step, Approach angle, Transfer, Throwing |
+| Catching | Receiving, Framing, Blocking, Pop time, Footwork |
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| AI | Anthropic Claude |
+| Database & Auth | Supabase |
+| Icons | Lucide React |
+| Deployment | Vercel |
+
+---
 
 ## Getting Started
 
-First, run the development server:
+```bash
+git clone https://github.com/Tatopapi3/moundvisitai.git
+cd moundvisitai
+npm install
+```
+
+Create a `.env.local` file:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+ANTHROPIC_API_KEY=your_anthropic_key
+```
+
+Run the database schema:
+
+```bash
+# Apply supabase-schema.sql to your Supabase project
+```
+
+Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Learn More
+```
+src/
+  app/
+    (app)/          # Authenticated app routes (dashboard, analysis)
+    (auth)/         # Login & signup pages
+    api/            # API routes (video analysis, session management)
+    page.tsx        # Landing page
+    layout.tsx      # Root layout
+  components/
+    AnalysisReport.tsx     # Full breakdown display
+    VideoUploader.tsx      # Video upload UI
+    MechanicsScore.tsx     # Score visualization
+    DrillCard.tsx          # Drill prescription cards
+    PositionSelector.tsx   # Position picker
+    Navbar.tsx             # Navigation
+  lib/              # Supabase client, utilities
+  types/            # TypeScript types
+supabase-schema.sql # Database schema
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploying
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+vercel --prod
+```
 
-## Deploy on Vercel
+Set the environment variables in your Vercel dashboard under Project → Settings → Environment Variables.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by [Juan Fernandez](https://github.com/Tatopapi3)

@@ -4,17 +4,27 @@ import { anthropic, buildAnalysisPrompt } from '@/lib/anthropic'
 import { createClient } from '@/lib/supabase/server'
 import { Position } from '@/types'
 
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+export const maxDuration = 60
 
+export async function POST(request: NextRequest) {
+  // Isolate Supabase auth so a bad key never kills the whole request
+  let supabase: Awaited<ReturnType<typeof createClient>> | null = null
+  let user = null
+  try {
+    supabase = await createClient()
+    const { data } = await supabase.auth.getUser()
+    user = data?.user ?? null
+  } catch {
+    // treat as guest
+  }
+
+  try {
     const formData = await request.formData()
-    const video = formData.get('video') as File
+    const video = formData.get('video') as File | null
     const position = formData.get('position') as Position
 
-    if (!video || !position) {
-      return NextResponse.json({ error: 'Missing video or position' }, { status: 400 })
+    if (!position) {
+      return NextResponse.json({ error: 'Missing position' }, { status: 400 })
     }
 
     // Collect extracted frames sent from client
@@ -31,8 +41,8 @@ export async function POST(request: NextRequest) {
     const prompt = buildAnalysisPrompt(position)
 
     const response = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 2048,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 3000,
       messages: [
         {
           role: 'user',
@@ -48,8 +58,18 @@ export async function POST(request: NextRequest) {
 
     let analysisData
     try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
-      analysisData = jsonMatch ? JSON.parse(jsonMatch[0]) : null
+      // Strip markdown fences then find the outermost JSON object via brace counting
+      const stripped = analysisText.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '')
+      const start = stripped.indexOf('{')
+      let extracted: string | null = null
+      if (start !== -1) {
+        let depth = 0
+        for (let i = start; i < stripped.length; i++) {
+          if (stripped[i] === '{') depth++
+          else if (stripped[i] === '}') { depth--; if (depth === 0) { extracted = stripped.slice(start, i + 1); break } }
+        }
+      }
+      analysisData = extracted ? JSON.parse(extracted) : null
     } catch {
       return NextResponse.json({ error: 'Failed to parse analysis' }, { status: 500 })
     }
@@ -58,8 +78,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid analysis response' }, { status: 500 })
     }
 
-    // Demo mode: no account, skip storage and DB
-    if (!user) {
+    // Demo mode: no account or no video, skip storage and DB
+    if (!user || !video) {
       return NextResponse.json({ demo: true, position, analysis: analysisData })
     }
 
@@ -68,7 +88,7 @@ export async function POST(request: NextRequest) {
     const videoBytes = new Uint8Array(videoBuffer)
     const fileName = `${user.id}/${Date.now()}-${video.name}`
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase!.storage
       .from('videos')
       .upload(fileName, videoBytes, { contentType: video.type })
 
@@ -76,11 +96,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Video upload failed' }, { status: 500 })
     }
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabase!.storage
       .from('videos')
       .getPublicUrl(fileName)
 
-    const { data: session, error: dbError } = await supabase
+    const { data: session, error: dbError } = await supabase!
       .from('analysis_sessions')
       .insert({
         user_id: user.id,
@@ -101,7 +121,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ sessionId: session.id, analysis: analysisData })
   } catch (error) {
-    console.error('Analysis error:', error)
-    return NextResponse.json({ error: 'Analysis failed' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Analysis error:', msg)
+    return NextResponse.json({ error: msg || 'Analysis failed' }, { status: 500 })
   }
 }

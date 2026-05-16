@@ -111,15 +111,17 @@ export default function AnalyzePage() {
       video.src = URL.createObjectURL(videoFile)
 
       video.onloadedmetadata = () => {
-        const maxWidth = 1280
-        const scale = Math.min(1, maxWidth / video.videoWidth)
+        const maxDim = 640
+        const scale = Math.min(1, maxDim / Math.max(video.videoWidth, video.videoHeight))
         canvas.width = Math.round(video.videoWidth * scale)
         canvas.height = Math.round(video.videoHeight * scale)
 
         const duration = video.duration || 0
+        // Two-window swing sampling: early motion and peak motion windows
+        const pcts = [0.08, 0.20, 0.78, 0.92]
         const timestamps = count === 1
-          ? [0]
-          : Array.from({ length: count }, (_, i) => (i / (count - 1)) * duration)
+          ? [duration * 0.15]
+          : Array.from({ length: count }, (_, i) => duration * (pcts[i] ?? i / (count - 1)))
         let index = 0
 
         function captureNext() {
@@ -133,7 +135,7 @@ export default function AnalyzePage() {
 
         video.onseeked = () => {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-          frames.push(canvas.toDataURL('image/jpeg', 0.75).split(',')[1])
+          frames.push(canvas.toDataURL('image/jpeg', 0.55).split(',')[1])
           index++
           captureNext()
         }
@@ -153,13 +155,12 @@ export default function AnalyzePage() {
 
     let frames: string[] = []
     try {
-      frames = await extractFrames(file)
+      frames = await extractFrames(file, 4)
     } catch {
       // Continue without frames if extraction fails; server will still run the prompt
     }
 
     const formData = new FormData()
-    formData.append('video', file)
     formData.append('position', position)
     frames.forEach((f, i) => formData.append(`frame_${i}`, f))
     formData.append('frameCount', String(frames.length))
@@ -169,7 +170,11 @@ export default function AnalyzePage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Analysis failed')
       if (data.demo) {
-        sessionStorage.setItem('demo-analysis', JSON.stringify({ position: data.position, ...data.analysis }))
+        sessionStorage.setItem('demo-analysis', JSON.stringify({
+          position: data.position,
+          ...data.analysis,
+          frames: frames.map(f => `data:image/jpeg;base64,${f}`),
+        }))
         router.push('/analyze/demo')
       } else {
         router.push(`/analyze/${data.sessionId}`)

@@ -12,16 +12,26 @@ const POSITION_CHECKPOINTS: Record<Position, string[]> = {
   catching: ['stance', 'receiving', 'framing', 'blocking', 'pop time footwork', 'throwing mechanics'],
 }
 
-const HOF_COMPARISONS: Record<Position, string[]> = {
-  pitching: ['Nolan Ryan', 'Randy Johnson'],
-  hitting: ['Albert Pujols', 'Ken Griffey Jr.'],
-  fielding: ['Ken Griffey Jr.', 'Ozzie Smith'],
-  catching: ['Johnny Bench', 'Ivan Rodriguez'],
+// Full rosters — API randomly picks 3 per analysis to stay within Vercel's 10s timeout
+const HOF_ROSTERS: Record<Position, string[]> = {
+  pitching: ['Nolan Ryan', 'Randy Johnson', 'Shohei Ohtani', 'Jacob deGrom', 'Paul Skenes', 'Cam Schlittler'],
+  hitting:  ['Albert Pujols', 'Ken Griffey Jr.', 'Aaron Judge', 'Mike Trout', 'Shohei Ohtani', 'Juan Soto'],
+  fielding: ['Ken Griffey Jr.', 'Ivan Rodriguez'],
+  catching: ['Ivan Rodriguez', 'Yadier Molina'],
+}
+
+function pickRandom<T>(arr: T[], n: number): T[] {
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, n)
+}
+
+function getHofPlayers(position: Position): string[] {
+  const roster = HOF_ROSTERS[position]
+  return roster.length <= 2 ? roster : pickRandom(roster, 2)
 }
 
 export function buildAnalysisPrompt(position: Position): string {
   const checkpoints = POSITION_CHECKPOINTS[position]
-  const hofPlayers = HOF_COMPARISONS[position]
+  const hofPlayers = getHofPlayers(position)
 
   return `You are an elite baseball mechanics coach and scout specializing in ${position}. You are analyzing sequential video frames of an athlete's ${position} mechanics.
 
@@ -63,5 +73,5 @@ Return a JSON object with this exact structure:
   ]
 }
 
-Include up to 5 checkpoints. Include up to 4 drill prescriptions. Include all ${hofPlayers.length} HOF comparisons. Base everything on what you actually observe in the frames — be specific, actionable, and position-appropriate. Return only valid JSON.`
+Include exactly 2 checkpoints, exactly 2 drills, and all ${hofPlayers.length} HOF comparisons. Keep every text field under 20 words. Base everything on what you observe in the frames. Return ONLY the raw JSON — no markdown, no code fences, no extra text.`
 }

@@ -117,8 +117,8 @@ export default function AnalyzePage() {
         canvas.height = Math.round(video.videoHeight * scale)
 
         const duration = video.duration || 0
-        // One frame from each swing window: start of motion, peak of motion
-        const pcts = [0.12, 0.85]
+        // Two-window swing sampling: early and peak of each swing window
+        const pcts = [0.08, 0.20, 0.78, 0.92]
         const timestamps = count === 1
           ? [duration * 0.15]
           : Array.from({ length: count }, (_, i) => duration * (pcts[i] ?? i / (count - 1)))
@@ -155,7 +155,7 @@ export default function AnalyzePage() {
 
     let frames: string[] = []
     try {
-      frames = await extractFrames(file, 2)
+      frames = await extractFrames(file, 4)
     } catch {
       // Continue without frames if extraction fails; server will still run the prompt
     }

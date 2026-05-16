@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Zap, Target, TrendingUp, Shield } from 'lucide-react'
+import { ArrowRight, Zap, Target, TrendingUp, Shield, Heart } from 'lucide-react'
 
 
 export default function LandingPage() {
@@ -12,17 +12,12 @@ export default function LandingPage() {
           <img src="/logo.png" alt="MoundVisit AI" className="h-9 w-9" />
           <span className="font-bold text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>MoundVisit AI</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-gray-400 hover:text-white transition-colors text-sm">
-            Sign In
-          </Link>
-          <Link
-            href="/signup"
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            Get Started Free
-          </Link>
-        </div>
+        <Link
+          href="/analyze"
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          Try It Free
+        </Link>
       </nav>
 
       {/* Hero */}
@@ -44,16 +39,10 @@ export default function LandingPage() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/signup"
+            href="/analyze"
             className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-colors"
           >
             Analyze Your Mechanics <ArrowRight className="w-5 h-5" />
-          </Link>
-          <Link
-            href="/login"
-            className="text-gray-400 hover:text-white px-8 py-4 rounded-xl font-semibold text-lg transition-colors border border-white/10 hover:border-white/20"
-          >
-            Sign In
           </Link>
         </div>
       </section>
@@ -107,11 +96,33 @@ export default function LandingPage() {
         <h2 className="text-4xl font-bold mb-4">Stop guessing. Start improving.</h2>
         <p className="text-gray-400 mb-8">Join athletes who are getting elite coaching feedback between lessons.</p>
         <Link
-          href="/signup"
+          href="/analyze"
           className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-colors"
         >
-          Get Started Free <ArrowRight className="w-5 h-5" />
+          Analyze Your Mechanics <ArrowRight className="w-5 h-5" />
         </Link>
+      </section>
+
+      {/* Donation */}
+      <section className="max-w-2xl mx-auto px-6 py-16 text-center">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <div className="w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-6 h-6 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Support MoundVisit AI</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md mx-auto">
+            This tool is free for every athlete. If it helped your game, consider buying me a coffee to keep it running and improving.
+          </p>
+          <a
+            href="https://www.paypal.com/donate?business=jc38703%40gmail.com&currency_code=USD&item_name=Support+MoundVisit+AI"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold text-sm transition-colors"
+          >
+            <Heart className="w-4 h-4" /> Donate via PayPal
+          </a>
+          <p className="text-gray-600 text-xs mt-4">Any amount helps — thank you.</p>
+        </div>
       </section>
 
       {/* Footer */}

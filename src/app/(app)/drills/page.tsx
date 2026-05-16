@@ -5,11 +5,12 @@ export default async function DrillsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Fetch all drills from user's sessions
-  const { data: sessions } = await supabase
-    .from('analysis_sessions')
-    .select('position, drills')
-    .eq('user_id', user!.id)
+  const { data: sessions } = user
+    ? await supabase
+        .from('analysis_sessions')
+        .select('position, drills')
+        .eq('user_id', user.id)
+    : { data: null }
 
   const allDrills = sessions?.flatMap((s) =>
     (s.drills || []).map((d: Record<string, string>) => ({ ...d, position: s.position }))

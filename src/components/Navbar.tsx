@@ -5,9 +5,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { LayoutDashboard, Plus, BookOpen, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { User } from '@supabase/supabase-js'
 
-
-export default function Navbar() {
+export default function Navbar({ user }: { user: User | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -51,13 +51,22 @@ export default function Navbar() {
           </div>
         </div>
 
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors text-sm px-3 py-1.5 rounded-lg hover:bg-white/5"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Sign Out
-        </button>
+        {user ? (
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors text-sm px-3 py-1.5 rounded-lg hover:bg-white/5"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign Out
+          </button>
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors text-sm px-3 py-1.5 rounded-lg hover:bg-white/5"
+          >
+            Sign In
+          </Link>
+        )}
       </div>
     </nav>
   )

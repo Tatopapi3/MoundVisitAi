@@ -7,12 +7,14 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: sessions } = await supabase
-    .from('analysis_sessions')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: false })
-    .limit(10)
+  const { data: sessions } = user
+    ? await supabase
+        .from('analysis_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+    : { data: null }
 
   const positionColors: Record<string, string> = {
     pitching: 'bg-blue-500/20 text-blue-400 border-blue-500/30',

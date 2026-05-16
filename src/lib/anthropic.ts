@@ -12,20 +12,41 @@ const POSITION_CHECKPOINTS: Record<Position, string[]> = {
   catching: ['stance', 'receiving', 'framing', 'blocking', 'pop time footwork', 'throwing mechanics'],
 }
 
+const HOF_COMPARISONS: Record<Position, string[]> = {
+  pitching: ['Nolan Ryan', 'Randy Johnson'],
+  hitting: ['Albert Pujols', 'Ken Griffey Jr.'],
+  fielding: ['Ken Griffey Jr.', 'Ozzie Smith'],
+  catching: ['Johnny Bench', 'Ivan Rodriguez'],
+}
+
 export function buildAnalysisPrompt(position: Position): string {
   const checkpoints = POSITION_CHECKPOINTS[position]
-  return `You are an elite baseball mechanics coach specializing in ${position}. Analyze the provided video frames of an athlete's ${position} mechanics.
+  const hofPlayers = HOF_COMPARISONS[position]
 
-Evaluate specifically these mechanical checkpoints for ${position}: ${checkpoints.join(', ')}.
+  return `You are an elite baseball mechanics coach and scout specializing in ${position}. You are analyzing sequential video frames of an athlete's ${position} mechanics.
+
+Study the provided frames carefully — they capture key moments throughout the motion. Use what you actually see in the frames to make your analysis.
+
+Evaluate these mechanical checkpoints for ${position}: ${checkpoints.join(', ')}.
+
+Also compare the athlete's mechanics to these Hall of Famers known for elite ${position} mechanics: ${hofPlayers.join(', ')}. For each, score how similar the athlete's mechanics are (0–100) based on what you observe in the frames.
 
 Return a JSON object with this exact structure:
 {
   "overallScore": <number 0-100>,
-  "summary": "<2-3 sentence plain English summary of overall mechanics>",
+  "summary": "<2-3 sentence plain English summary of overall mechanics based on the actual footage>",
+  "comparison": [
+    {
+      "player": "<HOF player name>",
+      "similarity": <number 0-100>,
+      "strengths": "<specific mechanical traits the athlete shares with this player, based on what you see>",
+      "gaps": "<specific differences from this player's elite mechanics>"
+    }
+  ],
   "checkpoints": [
     {
-      "timestamp": "<e.g. 0:02>",
-      "observation": "<specific mechanical observation>",
+      "timestamp": "<frame reference e.g. 'Frame 2'>",
+      "observation": "<specific mechanical observation from the footage>",
       "whyItMatters": "<why this mechanical point affects performance or injury risk>",
       "fix": "<specific, actionable correction>",
       "severity": "<critical|moderate|minor>"
@@ -42,5 +63,5 @@ Return a JSON object with this exact structure:
   ]
 }
 
-Include up to 5 checkpoints. Include up to 4 drill prescriptions. Be specific, actionable, and position-appropriate. Return only valid JSON.`
+Include up to 5 checkpoints. Include up to 4 drill prescriptions. Include all ${hofPlayers.length} HOF comparisons. Base everything on what you actually observe in the frames — be specific, actionable, and position-appropriate. Return only valid JSON.`
 }

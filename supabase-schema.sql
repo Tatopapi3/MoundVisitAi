@@ -7,6 +7,7 @@ create table public.analysis_sessions (
   summary text not null,
   checkpoints jsonb not null default '[]'::jsonb,
   drills jsonb not null default '[]'::jsonb,
+  comparison jsonb not null default '[]'::jsonb,
   video_url text,
   created_at timestamptz default now() not null
 );

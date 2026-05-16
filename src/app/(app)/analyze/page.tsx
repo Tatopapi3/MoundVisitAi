@@ -99,20 +99,81 @@ export default function AnalyzePage() {
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
   }
 
+  async function extractFrames(videoFile: File, count = 6): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video')
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      const frames: string[] = []
+
+      video.preload = 'auto'
+      video.muted = true
+      video.src = URL.createObjectURL(videoFile)
+
+      video.onloadedmetadata = () => {
+        const maxWidth = 1280
+        const scale = Math.min(1, maxWidth / video.videoWidth)
+        canvas.width = Math.round(video.videoWidth * scale)
+        canvas.height = Math.round(video.videoHeight * scale)
+
+        const duration = video.duration || 0
+        const timestamps = count === 1
+          ? [0]
+          : Array.from({ length: count }, (_, i) => (i / (count - 1)) * duration)
+        let index = 0
+
+        function captureNext() {
+          if (index >= timestamps.length) {
+            URL.revokeObjectURL(video.src)
+            resolve(frames)
+            return
+          }
+          video.currentTime = timestamps[index]
+        }
+
+        video.onseeked = () => {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          frames.push(canvas.toDataURL('image/jpeg', 0.75).split(',')[1])
+          index++
+          captureNext()
+        }
+
+        video.onerror = () => reject(new Error('Failed to extract frames from video'))
+        captureNext()
+      }
+
+      video.onerror = () => reject(new Error('Failed to load video'))
+    })
+  }
+
   async function handleAnalyze() {
     if (!position || !file) return
     setLoading(true)
     setError('')
 
+    let frames: string[] = []
+    try {
+      frames = await extractFrames(file)
+    } catch {
+      // Continue without frames if extraction fails; server will still run the prompt
+    }
+
     const formData = new FormData()
     formData.append('video', file)
     formData.append('position', position)
+    frames.forEach((f, i) => formData.append(`frame_${i}`, f))
+    formData.append('frameCount', String(frames.length))
 
     try {
       const res = await fetch('/api/analyze', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Analysis failed')
-      router.push(`/analyze/${data.sessionId}`)
+      if (data.demo) {
+        sessionStorage.setItem('demo-analysis', JSON.stringify({ position: data.position, ...data.analysis }))
+        router.push('/analyze/demo')
+      } else {
+        router.push(`/analyze/${data.sessionId}`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed')
       setLoading(false)

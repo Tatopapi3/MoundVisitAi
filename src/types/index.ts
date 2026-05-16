@@ -16,6 +16,13 @@ export interface DrillPrescription {
   focus: string
 }
 
+export interface HofComparison {
+  player: string
+  similarity: number
+  strengths: string
+  gaps: string
+}
+
 export interface AnalysisReport {
   id: string
   userId: string
@@ -24,6 +31,7 @@ export interface AnalysisReport {
   summary: string
   checkpoints: MechanicalCheckpoint[]
   drills: DrillPrescription[]
+  comparison: HofComparison[]
   createdAt: string
   videoUrl?: string
 }

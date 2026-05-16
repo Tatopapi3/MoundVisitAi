@@ -8,11 +8,13 @@ export default async function AnalysisResultPage({ params }: { params: Promise<{
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) notFound()
+
   const { data: session } = await supabase
     .from('analysis_sessions')
     .select('*')
     .eq('id', sessionId)
-    .eq('user_id', user!.id)
+    .eq('user_id', user.id)
     .single()
 
   if (!session) notFound()
@@ -26,7 +28,7 @@ export default async function AnalysisResultPage({ params }: { params: Promise<{
         </div>
       </div>
 
-      <MechanicsScore score={session.overall_score} summary={session.summary} />
+      <MechanicsScore score={session.overall_score} summary={session.summary} comparison={session.comparison} />
       <AnalysisReport checkpoints={session.checkpoints} drills={session.drills} />
     </div>
   )
